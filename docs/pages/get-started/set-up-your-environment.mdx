@@ -1,32 +1,147 @@
----
-title: Set up your environment
-description: Learn how to set up your development environment to start building with Expo.
-hideTOC: true
-searchRank: 3
----
+// App.js
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Button,
+  SafeAreaView,
+} from "react-native";
 
-import { DevelopmentEnvironmentInstructions } from '~/scenes/get-started/set-up-your-environment/DevelopmentEnvironmentInstructions';
-import { DevelopmentModeForm } from '~/scenes/get-started/set-up-your-environment/DevelopmentModeForm';
-import { PlatformAndDeviceForm } from '~/scenes/get-started/set-up-your-environment/PlatformAndDeviceForm';
+const PRODUCTS = [
+  {
+    id: "1",
+    name: "Smartphone",
+    price: 25000,
+    image:
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80",
+  },
+  {
+    id: "2",
+    name: "Wireless Headphones",
+    price: 15000,
+    image:
+      "https://images.unsplash.com/photo-1518449074242-216a47c21f7a?auto=format&fit=crop&w=600&q=80",
+  },
+  {
+    id: "3",
+    name: "Laptop",
+    price: 75000,
+    image:
+      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80",
+  },
+];
 
-Let's set up a local development environment for running your project on Android and iOS.
+export default function App() {
+  const [cart, setCart] = useState([]);
+  const [view, setView] = useState("products"); // products | cart
 
-## Where would you like to develop?
+  const addToCart = (product) => {
+    setCart((prevCart) => {
+      const existing = prevCart.find((item) => item.id === product.id);
+      if (existing) {
+        // Increase quantity if already in cart
+        return prevCart.map((item) =>
+          item.id === product.id ? { ...item, qty: item.qty + 1 } : item
+        );
+      } else {
+        return [...prevCart, { ...product, qty: 1 }];
+      }
+    });
+  };
 
-We recommend using a real device to develop, since you'll get to see exactly what your users will see.
+  const removeFromCart = (productId) => {
+    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
+  };
 
-<PlatformAndDeviceForm />
+  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
-## How would you like to develop?
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>RBJ Online Shop</Text>
+        <TouchableOpacity onPress={() => setView(view === "products" ? "cart" : "products")}>
+          <Text style={styles.cartBtn}>Cart ({cart.length})</Text>
+        </TouchableOpacity>
+      </View>
 
-Expo Go is a sandbox for trying out Expo quickly. A development build is a build of your own app that includes Expo's developer tools.
+      {view === "products" ? (
+        <FlatList
+          data={PRODUCTS}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.productCard}>
+              <Image source={{ uri: item.image }} style={styles.productImage} />
+              <Text style={styles.productName}>{item.name}</Text>
+              <Text style={styles.productPrice}>Rs. {item.price}</Text>
+              <Button title="Add to Cart" onPress={() => addToCart(item)} />
+            </View>
+          )}
+        />
+      ) : (
+        <View style={styles.cartContainer}>
+          {cart.length === 0 ? (
+            <Text>Your cart is empty.</Text>
+          ) : (
+            <>
+              <FlatList
+                data={cart}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <View style={styles.cartItem}>
+                    <Text>{item.name} x {item.qty}</Text>
+                    <Text>Rs. {item.price * item.qty}</Text>
+                    <Button
+                      title="Remove"
+                      onPress={() => removeFromCart(item.id)}
+                      color="red"
+                    />
+                  </View>
+                )}
+              />
+              <Text style={styles.total}>Total: Rs. {totalPrice}</Text>
+              <Button
+                title="Checkout"
+                onPress={() => alert("Checkout not implemented yet")}
+              />
+            </>
+          )}
+        </View>
+      )}
+    </SafeAreaView>
+  );
+}
 
-<DevelopmentModeForm />
-
----
-
-<DevelopmentEnvironmentInstructions />
-
-## Next step
-
-You have a project and a development environment. Now it's time to start developing.
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 10, backgroundColor: "#fff" },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  title: { fontSize: 24, fontWeight: "bold" },
+  cartBtn: { fontSize: 16, color: "blue" },
+  productCard: {
+    marginBottom: 20,
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 8,
+    borderColor: "#ddd",
+  },
+  productImage: { width: "100%", height: 150, marginBottom: 10, borderRadius: 8 },
+  productName: { fontSize: 18, fontWeight: "bold" },
+  productPrice: { fontSize: 16, marginBottom: 10 },
+  cartContainer: { flex: 1 },
+  cartItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderColor: "#ddd",
+  },
+  total: { fontSize: 18, fontWeight: "bold", marginVertical: 10 },
+});
